@@ -13,18 +13,26 @@ etc.
 
 ## How to build
 # Windows
+```
 go build -o artifact_collector.exe            # collector
 go build -o decryptor.exe ./tools/decrypt/    # decryptor
+```
 # Linux/Mac
+```
 GOOS=windows GOARCH=amd64 go build -o artifact_collector.exe           # collector
 GOOS=windows GOARCH=amd64 go build -o decryptor.exe ./tools/decrypt    # decryptor
+```
 
 ## Execution
 # Administrator rights and public RSA key (.pem) needed
 # base command to collect pre-defined artifacts
+```
 .\artifact_collector.exe
+```
 # example of using options (collecting memory, customizing artifacts, reporting in JSON format)
+```
 .\artifact_collector.exe -mem -config artifacts.csv -json
+```
 
 ## Flags
 | Flag | Default | Description |
@@ -36,10 +44,13 @@ GOOS=windows GOARCH=amd64 go build -o decryptor.exe ./tools/decrypt    # decrypt
 
 ## OUTPUT
 # general
+```
 <executing directory>\<machine name>_<timestamp>.bin
+```
 # using -mem option (separate file is generated)
+```
 <executing directory>\<machine name>_<timestamp>_memory.bin
-
+```
 
 ## Structure
 ```
@@ -75,15 +86,8 @@ artifact_collector/
 
 
 ## Key generation
-```bash
-# secret key
-openssl genrsa -out private.pem 4096
-
-# public key from secret key
-openssl rsa -in private.pem -pubout -out public.pem
+# PowerShell
 ```
-
-```powershell
 $rsa = [System.Security.Cryptography.RSA]::Create(4096)
 
 # secret key
@@ -96,11 +100,23 @@ $pubBytes = $rsa.ExportSubjectPublicKeyInfo()
 $pubB64 = [Convert]::ToBase64String($pubBytes)
 "-----BEGIN PUBLIC KEY-----`n" + ($pubB64 -replace '.{64}', "$&`n") + "`n-----END PUBLIC KEY-----" | Out-File public.pem -Encoding ascii
 ```
+
+# bash
+```
+# secret key
+openssl genrsa -out private.pem 4096
+
+# public key from secret key
+openssl rsa -in private.pem -pubout -out public.pem
+```
+
 # files generated
 - `private.pem`: PKCS#8 secret key (keep secure in a lab environment for decryption)
 - `public.pem`: PKIX/SubjectPublicKeyInfo public key (deliver with the collector)
 
 
 ## Decryption
+```
 decryptor.exe -key private.pem -in HOST_20261212121212.bin -out HOST                 # Windows artifacts in a directory, following structures as it was e.g. HOST\C\Windows\System32\winevtx\Logs\Security.evtx
 decryptor.exe -key private.pem -in HOST_20261212121212_memory.bin -out memory.raw    # memory dump
+```
