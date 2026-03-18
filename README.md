@@ -23,7 +23,7 @@ GOOS=windows GOARCH=amd64 go build -o decryptor.exe ./tools/decrypt    # decrypt
 ```
 
 ## Execution
-### Administrator rights and public RSA key (.pem) needed
+* Administrator rights and public RSA key (.pem) needed
 ### base command to collect pre-defined artifacts
 ```
 .\artifact_collector.exe
@@ -106,8 +106,8 @@ openssl rsa -in private.pem -pubout -out public.pem
 ```
 
 ### files being generated
-- private.pem: PKCS#8 secret key (keep secure in a lab environment for decryption)
-- public.pem: PKIX/SubjectPublicKeyInfo public key (deliver with the collector)
+- private.pem: RSA PKCS#8 secret key (keep secure in a lab environment for decryption)
+- public.pem: RSA PKIX/SubjectPublicKeyInfo public key (deliver with the collector)
 
 
 ## Decryption
