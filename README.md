@@ -1,108 +1,67 @@
-# forensic-collector (Go版)
+# forensic-collector
 
-Raw Volume 読み取り (NTFS直接解析) でライブWindows環境からアーティファクトを収集する。
+Collects essencial forensic artifacts from Windows. Linux and others will be added in the future.
 
-## 収集対象
+## Artifatcs (by default, being fixed
+$MFT
+UsnJrnl
+EventLog
+HKLM Registry Hives (SAM, SECURITY, SOFTWARE, SYSTEM)
+HKCU Registry Hives (NTUSER.dat, UsrClass.dat)
+Web History such as Chrome and Edge
+etc.
 
-| アーティファクト | パス |
-|---|---|
-| **$MFT** | `C:\$MFT` |
-| **Security.evtx** | `C:\Windows\System32\winevt\Logs\Security.evtx` |
-| **SYSTEM** | `C:\Windows\System32\config\SYSTEM` |
+### How to build
+go build -o artifact_collector.exe ./cmd
+### Linux/Mac
+GOOS=windows GOARCH=amd64 go build -o artifact_collector.exe ./cmd
 
-## 収集方式
+## Execution
+# Administrator rights and public RSA key (.pem) needed
+# base command to collect pre-defined artifacts
+.\artifact_collector.exe
+# example of using options (collecting memory, customizing artifacts, reporting in JSON format)
+.\artifact_collector.exe -mem -config artifacts.csv -json
 
-```
-\\.\C: を FILE_FLAG_NO_BUFFERING で開く
-        ↓
-FSCTL_GET_NTFS_VOLUME_DATA でボリューム情報取得
-        ↓
-$MFT (inode 0) のデータランから MFT 全体を読み込む
-        ↓
-MFT を線形走査して目的ファイルの inode を解決
- └─ $FILE_NAME 属性の親 inode + ファイル名 (大小文字無視) で照合
-        ↓
-inode の $DATA 属性からファイル内容を取得
- ├─ 非常駐: データランを辿りクラスタ単位で読む (断片化対応)
- └─ 常駐:  レコード内埋め込みデータを返す
-```
-
-## ビルド
-
-### Windows 上でビルド
-
-```powershell
-go build -o forensic-collector.exe ./cmd
-```
-
-### クロスコンパイル (Linux/Mac → Windows)
-
-```bash
-GOOS=windows GOARCH=amd64 go build -o forensic-collector.exe ./cmd
-```
-
-## 実行
-
-> **⚠️ 管理者権限 (Administrator) で実行してください**
-
-```powershell
-# 基本実行
-.\forensic-collector.exe
-
-# 出力先・オプション指定
-.\forensic-collector.exe -output D:\evidence -hash -json
-
-# 別ボリューム
-.\forensic-collector.exe -volume D: -output D:\evidence
-```
-
-## フラグ
-
-| フラグ | デフォルト | 説明 |
+## Flags
+| Flag | Default | Description |
 |---|---|---|
-| `-output <DIR>` | `.\forensic_output_<timestamp>` | 出力先ディレクトリ |
-| `-volume <VOL>` | `C:` | 収集対象ボリューム |
-| `-hash` | `true` | SHA-256 ハッシュを計算 |
-| `-json` | `false` | JSON レポートを追加出力 |
-| `-verbose` | `false` | デバッグログを表示 |
+| -config | <pre defined> | extraordinary paths are needed to be collected (e.g. D is used as System disk, backup evtx files exist) |
+| -hash | true | calculats and report SHA256 hash |
+| -json | false | export JSON log |
+| -verbose | false | shows debug log message on the console |
 
-## 出力ファイル
+## OUTPUT
+<executing directory>\<machine name>_<timestamp>.bin
+# files will be stored in a format like below
 
-```
-forensic_output_20240101_120000\
-├── MFT                      ← $MFT のコピー
-├── Security.evtx            ← セキュリティイベントログ
-├── SYSTEM                   ← SYSTEM レジストリハイブ
-├── collection_report.txt    ← テキストレポート
-└── collection_report.json   ← JSON レポート (-json 指定時)
-```
-
-## プロジェクト構成
-
-```
-forensic-collector-go/
+## Structure
+artifact_collector/
 ├── go.mod
-├── cmd/
-│   ├── main.go          # エントリポイント・CLI
-│   └── platform.go      # OS判定
 └── internal/
     ├── ntfs/
-    │   ├── volume_windows.go  # Raw Volume / NTFS パーサ
-    │   └── volume_other.go    # 非Windows スタブ
+    │   ├── volume.go      # Raw Volume処理
     ├── collector/
-    │   └── collector.go       # アーティファクト収集
+    │   └── collector.go   # アーティファクト収集
+    ├── crypto/
+    │   └── crypto.go      # 暗号化
     ├── hasher/
-    │   └── hasher.go          # SHA-256
+    │   └── hasher.go      # SHA256Hash生成
+    ├── memory/
+    │   └── memory.go      # メモリーダンプ収集
+    │   └── winpmem.go     # winpmem呼出
     ├── privilege/
-    │   ├── privilege_windows.go  # SeBackupPrivilege 有効化
-    │   └── privilege_other.go    # 非Windows スタブ
+    │   ├── privilege.go   # SeBackupPrivilege 有効化
     └── report/
-        └── report.go          # TXT / JSON レポート
+        └── report.go      # generates report(s) in TXT and JSON
+├── main.go                # entry point for CLI
+└── tools
+    └── decrypt/
+        └── main.go        # decrypts encrypted result file
 ```
 
 ## 依存ライブラリ
-
-| パッケージ | 用途 |
+| package | usage |
 |---|---|
 | `golang.org/x/sys/windows` | Win32 API (CreateFile, DeviceIoControl, etc.) |
 | 標準ライブラリのみ | その他すべて |
