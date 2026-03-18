@@ -12,24 +12,24 @@ Web History such as Chrome and Edge
 etc.
 
 ## How to build
-# Windows
+### Windows
 ```
 go build -o artifact_collector.exe            # collector
 go build -o decryptor.exe ./tools/decrypt/    # decryptor
 ```
-# Linux/Mac
+### Linux/Mac
 ```
 GOOS=windows GOARCH=amd64 go build -o artifact_collector.exe           # collector
 GOOS=windows GOARCH=amd64 go build -o decryptor.exe ./tools/decrypt    # decryptor
 ```
 
 ## Execution
-# Administrator rights and public RSA key (.pem) needed
-# base command to collect pre-defined artifacts
+### Administrator rights and public RSA key (.pem) needed
+### base command to collect pre-defined artifacts
 ```
 .\artifact_collector.exe
 ```
-# example of using options (collecting memory, customizing artifacts, reporting in JSON format)
+### example of using options (collecting memory, customizing artifacts, reporting in JSON format)
 ```
 .\artifact_collector.exe -mem -config artifacts.csv -json
 ```
@@ -43,14 +43,10 @@ GOOS=windows GOARCH=amd64 go build -o decryptor.exe ./tools/decrypt    # decrypt
 | -verbose | false | shows debug log message on the console |
 
 ## OUTPUT
-# general
-```
+### general
 <executing directory>\<machine name>_<timestamp>.bin
-```
-# using -mem option (separate file is generated)
-```
+### using -mem option (separate file is generated)
 <executing directory>\<machine name>_<timestamp>_memory.bin
-```
 
 ## Structure
 ```
@@ -79,14 +75,14 @@ artifact_collector/
 ```
 
 ## Dependencies
-| package | usage |
+| Package | Purpose |
 |---|---|
 | `golang.org/x/sys/windows` | Win32 API (CreateFile, DeviceIoControl, etc.) |
 | standard libraries | all others |
 
 
 ## Key generation
-# PowerShell
+### PowerShell
 ```
 $rsa = [System.Security.Cryptography.RSA]::Create(4096)
 
@@ -101,7 +97,7 @@ $pubB64 = [Convert]::ToBase64String($pubBytes)
 "-----BEGIN PUBLIC KEY-----`n" + ($pubB64 -replace '.{64}', "$&`n") + "`n-----END PUBLIC KEY-----" | Out-File public.pem -Encoding ascii
 ```
 
-# bash
+### bash
 ```
 # secret key
 openssl genrsa -out private.pem 4096
@@ -110,9 +106,9 @@ openssl genrsa -out private.pem 4096
 openssl rsa -in private.pem -pubout -out public.pem
 ```
 
-# files generated
-- `private.pem`: PKCS#8 secret key (keep secure in a lab environment for decryption)
-- `public.pem`: PKIX/SubjectPublicKeyInfo public key (deliver with the collector)
+### files being generated
+- private.pem: PKCS#8 secret key (keep secure in a lab environment for decryption)
+- public.pem: PKIX/SubjectPublicKeyInfo public key (deliver with the collector)
 
 
 ## Decryption
