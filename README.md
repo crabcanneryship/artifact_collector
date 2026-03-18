@@ -11,10 +11,13 @@ HKCU Registry Hives (NTUSER.dat, UsrClass.dat)
 Web History such as Chrome and Edge
 etc.
 
-### How to build
-go build -o artifact_collector.exe ./cmd
-### Linux/Mac
-GOOS=windows GOARCH=amd64 go build -o artifact_collector.exe ./cmd
+## How to build
+# Windows
+go build -o artifact_collector.exe            # collector
+go build -o decryptor.exe ./tools/decrypt/    # decryptor
+# Linux/Mac
+GOOS=windows GOARCH=amd64 go build -o artifact_collector.exe           # collector
+GOOS=windows GOARCH=amd64 go build -o decryptor.exe ./tools/decrypt    # decryptor
 
 ## Execution
 # Administrator rights and public RSA key (.pem) needed
@@ -32,26 +35,30 @@ GOOS=windows GOARCH=amd64 go build -o artifact_collector.exe ./cmd
 | -verbose | false | shows debug log message on the console |
 
 ## OUTPUT
+# general
 <executing directory>\<machine name>_<timestamp>.bin
-# files will be stored in a format like below
+# using -mem option (separate file is generated)
+<executing directory>\<machine name>_<timestamp>_memory.bin
+
 
 ## Structure
+```
 artifact_collector/
 ├── go.mod
 └── internal/
     ├── ntfs/
-    │   ├── volume.go      # Raw Volume処理
+    │   ├── volume.go      # handles Raw Volume
     ├── collector/
-    │   └── collector.go   # アーティファクト収集
+    │   └── collector.go   # collects artifacts
     ├── crypto/
-    │   └── crypto.go      # 暗号化
+    │   └── crypto.go      # crypts the result
     ├── hasher/
-    │   └── hasher.go      # SHA256Hash生成
+    │   └── hasher.go      # generates SHA256 hash
     ├── memory/
-    │   └── memory.go      # メモリーダンプ収集
-    │   └── winpmem.go     # winpmem呼出
+    │   └── memory.go      # dumps memory 
+    │   └── winpmem.go     # handles winpmem (winpmem_mini_x64.exe needed)
     ├── privilege/
-    │   ├── privilege.go   # SeBackupPrivilege 有効化
+    │   ├── privilege.go   # enables SeBackupPrivilege
     └── report/
         └── report.go      # generates report(s) in TXT and JSON
 ├── main.go                # entry point for CLI
@@ -60,8 +67,40 @@ artifact_collector/
         └── main.go        # decrypts encrypted result file
 ```
 
-## 依存ライブラリ
+## Dependencies
 | package | usage |
 |---|---|
 | `golang.org/x/sys/windows` | Win32 API (CreateFile, DeviceIoControl, etc.) |
-| 標準ライブラリのみ | その他すべて |
+| standard libraries | all others |
+
+
+## Key generation
+```bash
+# secret key
+openssl genrsa -out private.pem 4096
+
+# public key from secret key
+openssl rsa -in private.pem -pubout -out public.pem
+```
+
+```powershell
+$rsa = [System.Security.Cryptography.RSA]::Create(4096)
+
+# secret key
+$privBytes = $rsa.ExportRSAPrivateKey()
+$privB64 = [Convert]::ToBase64String($privBytes)
+"-----BEGIN RSA PRIVATE KEY-----`n" + ($privB64 -replace '.{64}', "$&`n") + "`n-----END RSA PRIVATE KEY-----" | Out-File private.pem -Encoding ascii
+
+# public key
+$pubBytes = $rsa.ExportSubjectPublicKeyInfo()
+$pubB64 = [Convert]::ToBase64String($pubBytes)
+"-----BEGIN PUBLIC KEY-----`n" + ($pubB64 -replace '.{64}', "$&`n") + "`n-----END PUBLIC KEY-----" | Out-File public.pem -Encoding ascii
+```
+# files generated
+- `private.pem`: PKCS#8 secret key (keep secure in a lab environment for decryption)
+- `public.pem`: PKIX/SubjectPublicKeyInfo public key (deliver with the collector)
+
+
+## Decryption
+decryptor.exe -key private.pem -in HOST_20261212121212.bin -out HOST                 # Windows artifacts in a directory, following structures as it was e.g. HOST\C\Windows\System32\winevtx\Logs\Security.evtx
+decryptor.exe -key private.pem -in HOST_20261212121212_memory.bin -out memory.raw    # memory dump
