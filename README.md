@@ -43,9 +43,9 @@ GOOS=windows GOARCH=amd64 go build -o decryptor.exe ./tools/decrypt    # decrypt
 
 ## OUTPUT
 ### general
-<executing directory>\<machine name>_<timestamp>.bin
+'<executing directory>\<machine name>_<timestamp>.bin'
 ### using -mem option (separate file is generated)
-<executing directory>\<machine name>_<timestamp>_memory.bin
+'<executing directory>\<machine name>_<timestamp>_memory.bin'
 
 ## Structure
 ```
