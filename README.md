@@ -1,5 +1,4 @@
-# forensic-collector
-
+# artifact_collector
 Collects essencial forensic artifacts from Windows. Linux and others will be added in the future.
 
 ## Artifatcs (by default, being fixed
