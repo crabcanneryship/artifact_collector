@@ -112,6 +112,6 @@ openssl rsa -in private.pem -pubout -out public.pem
 
 ## Decryption
 ```
-decryptor.exe -key private.pem -in HOST_20261212121212.bin -out HOST                 # Windows artifacts in a directory, following structures as it was e.g. HOST\C\Windows\System32\winevtx\Logs\Security.evtx
-decryptor.exe -key private.pem -in HOST_20261212121212_memory.bin -out memory.raw    # memory dump
+decryptor.exe -key private.pem -in HOST_202612121212.bin -out HOST                 # Windows artifacts in a directory, following structures as it was e.g. HOST\C\Windows\System32\winevtx\Logs\Security.evtx
+decryptor.exe -key private.pem -in HOST_202612121212_memory.bin -out memory.raw    # memory dump
 ```
