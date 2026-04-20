@@ -1,3 +1,5 @@
+NOTE: this is just a prototype and will be completed as https://github.com/agilabilis
+
 # artifact_collector
 Collects essential forensic artifacts from Windows. Linux and others will be added in the future.
 
