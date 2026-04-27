@@ -49,39 +49,6 @@ GOOS=windows GOARCH=amd64 go build -o decryptor.exe ./tools/decrypt    # decrypt
 ### using -mem option (separate file is generated)
 `<executing directory>\<machine name>_<timestamp>_memory.bin`
 
-## Structure
-```
-artifact_collector/
-├── go.mod
-└── internal/
-    ├── ntfs/
-    │   ├── volume.go      # handles Raw Volume
-    ├── collector/
-    │   └── collector.go   # collects artifacts
-    ├── crypto/
-    │   └── crypto.go      # crypts the result
-    ├── hasher/
-    │   └── hasher.go      # generates SHA256 hash
-    ├── memory/
-    │   └── memory.go      # dumps memory 
-    │   └── winpmem.go     # handles winpmem (winpmem_mini_x64.exe needed)
-    ├── privilege/
-    │   ├── privilege.go   # enables SeBackupPrivilege
-    └── report/
-        └── report.go      # generates report(s) in TXT and JSON
-├── main.go                # entry point for CLI
-└── tools
-    └── decrypt/
-        └── main.go        # decrypts encrypted result file
-```
-
-## Dependencies
-| Package | Purpose |
-|---|---|
-| `golang.org/x/sys/windows` | Win32 API (CreateFile, DeviceIoControl, etc.) |
-| standard libraries | all others |
-
-
 ## Key generation
 ### PowerShell
 ```
